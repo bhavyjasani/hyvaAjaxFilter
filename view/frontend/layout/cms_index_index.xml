@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <script src="Bhavy_AjaxFilter::js/filter.js"/>        
+    </head>
+    <body>
+        <referenceContainer name="content">
+            <block class="Bhavy\AjaxFilter\Block\SkuSearch" name="vendor.sku.search" template="Bhavy_AjaxFilter::sku-search.phtml" after="-"/>
+        </referenceContainer>
+    </body>
+</page>

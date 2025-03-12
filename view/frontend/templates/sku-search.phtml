@@ -1,0 +1,224 @@
+<div x-data="{ activeSection: 1 }">
+    <button class="inline-flex shrink-0 ml-auto xl:mt-0 btn btn-primary"
+        @click="activeSection = (activeSection === 1) ? activeSection : 1">Sku Section</button>
+    <button class="inline-flex shrink-0 ml-auto xl:mt-0 btn btn-primary"
+        @click="activeSection = (activeSection === 2) ? activeSection : 2">Attribute Section</button>
+
+    <div class="sku-search-container my-8" x-data="skuSearchData()" x-show="activeSection === 1">
+        <div class="sku-search-field max-w-lg mx-auto">
+            <label for="sku-search-input" class="block text-lg font-bold mb-2">Search by SKU:</label>
+            <div class="relative">
+                <input type="text" id="sku-search-input" x-model="searchTerm" placeholder="Enter product SKU...">
+                <div class="absolute right-3 top-3" x-show="loading">
+                    <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 
+                            0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                </div>
+
+                <!-- Exact Match View -->
+                <div x-show="exactMatch !== null && showResults">
+                    <div @click="exactMatchProduct(exactMatch.url)">
+                        <div class="flex-shrink-0 mr-4">
+                            <img :src="exactMatch?.image" alt="Product Image" class="w-24 h-24 object-contain">
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-lg" x-text="exactMatch?.name"></h3>
+                            <p class="text-sm text-gray-500">SKU: <span x-text="exactMatch?.sku"></span></p>
+                            <button
+                                class="mt-2 px-4 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 
+                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                View Product
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Partial Matches View -->
+                <div x-show="exactMatch === null && partialMatches.length > 0 && showResults">
+                    <select x-model="selectedProductUrl" x-show="partialMatches.length > 0">
+                        <template x-for="item in partialMatches" :key="item.id">
+                            <option :value="item.url" x-text="item.name"></option>
+                        </template>
+                    </select>
+                    <button class="inline-flex shrink-0 ml-auto xl:mt-0 btn btn-primary" @click="goToProduct">Go to
+                        Product</button>
+                </div>
+
+
+                <!-- No Results View -->
+                <div x-show="exactMatch === null && partialMatches.length === 0 && !loading && showResults">
+                    <div>No products found</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="attribute-search-container my-8" x-data="productsData()" x-show="activeSection === 2">
+
+        <!-------------------------first section ---------------------->
+        <div class="sku-search-field max-w-lg mx-auto" x-data="attributeData1()">
+            <label for="sku-search-input" class="block text-lg font-bold mb-2">Search by Attribute:</label>
+            <div class="relative">
+
+                <div>
+                    <?php $attributes = $block->getAllProductAttributes(); ?>
+                    <select x-model="selectattribute1">
+                        <?php foreach ($attributes as $attribute): ?>
+                            <option value="<?= /* @noEscape */ $attribute['attribute_code']; ?>">
+                                <?= /* @noEscape */ $attribute['attribute_code']; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="absolute right-3 top-3" x-show="loading">
+                    <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 
+                            0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                </div>
+
+
+                <!--dropdown select-->
+                <div x-show="attributetype === 'select'">
+                    <label>Select Value:</label>
+                    <select x-model="attributeValue1" x-show="attributeval.length > 0">
+                        <template x-for="value in attributeval" :key="value.value">
+                            <option :value="value.value" x-text="value.label"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <!--dropdown multiselect-->
+                <div x-show="attributetype === 'multiselect'">
+                    <label>Select Value:</label>
+                    <select multiple size=5 x-model="multiselector1" x-show="attributeval.length > 0">
+                        <template x-for="value in attributeval" :key="value.value">
+                            <option :value="value.value" x-text="value.label"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <!--boolean value-->
+                <div x-show="attributetype === 'boolean'">
+                    <label>Select Value:</label>
+                    <input type="radio" value="0" x-model="attributeValue1">No
+                    <input type="radio" value="1" x-model="attributeValue1">Yes
+                </div>
+
+                <!--text box-->
+                <div x-show="attributetype === 'text' || attributetype === 'price'">
+                    <label>input text</label>
+                    <input type="text" x-model="attributeValue1">
+                </div>
+
+                <!--textarea box-->
+                <div x-show="attributetype === 'textarea'">
+                    <label>input text</label>
+                    <input type="textarea" x-model="attributeValue1">
+                </div>
+            </div>
+        </div>
+
+        <!----------------------- secound section ------------------------>
+
+        <div class="sku-search-field max-w-lg mx-auto" x-data="attributeData2()">
+            <label for="sku-search-input" class="block text-lg font-bold mb-2">Search by Attribute:</label>
+            <div class="relative">
+
+                <div>
+                    <?php $attributes = $block->getAllProductAttributes(); ?>
+                    <select x-model="selectattribute2">
+                        <?php foreach ($attributes as $attribute): ?>
+                            <option value="<?= /* @noEscape */ $attribute['attribute_code']; ?>">
+                                <?= /* @noEscape */ $attribute['attribute_code']; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="absolute right-3 top-3" x-show="loading">
+                    <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 
+                            0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                </div>
+
+
+                <!--dropdown select-->
+                <div x-show="attributetype === 'select'">
+                    <label>Select Value:</label>
+                    <select x-model="attributeValue2" x-show="attributeval.length > 0">
+                        <template x-for="value in attributeval" :key="value.value">
+                            <option :value="value.value" x-text="value.label"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <!--dropdown multiselect-->
+                <div x-show="attributetype === 'multiselect'">
+                    <label>Select Value:</label>
+                    <select multiple size=5 x-model="multiselector2" x-show="attributeval.length > 0">
+                        <template x-for="value in attributeval" :key="value.value">
+                            <option :value="value.value" x-text="value.label"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <!--boolean value-->
+                <div x-show="attributetype === 'boolean'">
+                    <label>Select Value:</label>
+                    <input type="radio" value="0" x-model="attributeValue2">No
+                    <input type="radio" value="1" x-model="attributeValue2">Yes
+                </div>
+
+                <!--text box-->
+                <div x-show="attributetype === 'text' || attributetype === 'price'">
+                    <label>input text</label>
+                    <input type="text" x-model="attributeValue2">
+                </div>
+
+                <!--textarea box-->
+                <div x-show="attributetype === 'textarea'">
+                    <label>input text</label>
+                    <input type="textarea" x-model="attributeValue2">
+                </div>
+            </div>
+        </div>
+
+        <div x-show="searchbutton">
+            <button class="inline-flex shrink-0 mt-4 btn btn-primary" @click="getProducts">Search Product</button>
+        </div>
+
+
+        <!-- products show -->
+        <div x-show="products.length > 0">
+            <label>Select product:</label>
+            <select x-model="selectedProductUrl">
+                <template x-for="item in products" :key="item.id">
+                    <option :value="item.url" x-text="item.name"></option>
+                </template>
+            </select>
+            <button class="inline-flex shrink-0 ml-auto xl:mt-0 btn btn-primary" @click="goToProduct">Go To
+                Product</button>
+        </div>
+
+        <div x-show="products.length === 0 && !loading && showResults">
+            <div>No products found</div>
+        </div>
+    </div>
+</div>
